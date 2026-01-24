@@ -6,21 +6,23 @@ public class OUUBlueprintValidation : ModuleRules
 {
 	public OUUBlueprintValidation(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[]
+		PublicDependencyModuleNames.AddRange(new[]
 		{
 			"Core",
 			"DataValidation",
 			"DeveloperSettings"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[]
+		PrivateDependencyModuleNames.AddRange(new[]
 		{
 			"CoreUObject",
 			"Engine",
 			"BlueprintGraph",
-			"UnrealEd"
+			"UnrealEd",
+			"Kismet",
+			"UMGEditor"
 		});
 	}
 }

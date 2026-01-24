@@ -2,7 +2,9 @@
 
 #include "OUUBlueprintComplexity.h"
 
+#include "EdGraph/EdGraph.h"
 #include "EdGraphNode_Comment.h"
+#include "EdGraphSchema_K2.h"
 #include "K2Node_ExecutionSequence.h"
 #include "OUUBlueprintValidationUtils.h"
 
@@ -21,8 +23,7 @@ namespace OUU::BlueprintValidation
 		// branches, so there's only a matter of value selection, not execution flow / order changes on the BP graph
 		// level.
 		TArray<UEdGraphPin*> ConnectedExecOutPins = Node.Pins.FilterByPredicate([](const UEdGraphPin* Pin) {
-			return Pin && Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Exec
-				&& Pin->Direction == EEdGraphPinDirection::EGPD_Output;
+			return Pin && Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Exec && Pin->Direction == EGPD_Output;
 		});
 
 		TArray<UEdGraphPin*> ConnectedPins;
@@ -98,7 +99,7 @@ namespace OUU::BlueprintValidation
 				GraphComplexity += NumberOfBranches;
 			}
 		}
-		return static_cast<double>(GraphComplexity);
+		return GraphComplexity;
 	}
 
 	FHalsteadComplexity ComputeHalsteadGraphComplexity(UEdGraph& Graph)

@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 
+class UEdGraph;
+
 namespace OUU::BlueprintValidation
 {
 	// This is the formula that pieces all the other metrics below together into a maintainability index.
-	// Uses the Microsoft formula:
+	// Uses the Microsoft formula from here:
+	// For blueprint, we might get better results with other formulas.
 	// https://learn.microsoft.com/en-us/visualstudio/code-quality/code-metrics-maintainability-index-range-and-meaning
-	FORCEINLINE double ComputeMaintainabilityIndex(
+	FORCEINLINE double ComputeMicrosoftMaintainabilityIndex(
 		double HalsteadVolume,
 		double Cyclomatic_Complexity,
 		double LinesOfCode)

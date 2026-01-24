@@ -25,6 +25,9 @@ public:
 		FDataValidationContext& Context) override;
 	// --
 
-private:
-	EDataValidationResult CheckCyclomaticComplexity(const UBlueprint& Blueprint, FDataValidationContext& Context);
+	// This implementation is reused for both this asset validator and the BP compiler extension.
+	static void ValidateMaintainability(
+		const UBlueprint& Blueprint,
+		TFunctionRef<void(TSharedRef<FTokenizedMessage>)> MessageFunction,
+		bool LogMetrics);
 };

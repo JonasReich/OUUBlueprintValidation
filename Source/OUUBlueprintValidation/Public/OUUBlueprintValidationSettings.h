@@ -18,14 +18,17 @@ public:
 		return *GetDefault<UOUUBlueprintValidationSettings>();
 	}
 
-	// Should info messages for BP maintainability be sent even if all checks pass?
-	// This can be very spammy for per-graph stats but help find more detailed info on metrics.
-	UPROPERTY(Config, EditAnywhere, Category = "Bluperint Maintainability - Overall")
-	bool InfoOnSuccess = false;
-
 	// Should messages for BP maintainability failures be sent only as warning? Otherwise they are sent as error.
 	UPROPERTY(Config, EditAnywhere, Category = "Bluperint Maintainability - Overall")
 	bool WarnOnFailure = false;
+
+	// Should info messages for BP maintainability be sent to the compiler output independent of validation result?
+	UPROPERTY(Config, EditAnywhere, Category = "Bluperint Maintainability - Overall")
+	bool LogMetricsOnBlueprintCompile = false;
+
+	// Should info messages for BP maintainability be sent to the message log independent of validation result?
+	UPROPERTY(Config, EditAnywhere, Category = "Bluperint Maintainability - Overall")
+	bool LogMetricsOnAssetValidate = false;
 
 	UPROPERTY(Config, EditAnywhere, Category = "Bluperint Maintainability - Overall", meta = (UIMin = 0, UIMax = 200))
 	int32 MaxGraphsPerBlueprint = 100;
