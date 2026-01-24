@@ -109,19 +109,24 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 			continue;
 		}
 
-		const auto GraphComplexity = OUU::BlueprintValidation::ComputeCyclomaticGraphComplexity(*Graph);
+		// For display purposes: round all values to integers
+
+		const double GraphComplexityDouble = OUU::BlueprintValidation::ComputeCyclomaticGraphComplexity(*Graph);
+		const int32 GraphComplexity = FMath::RoundToInt(GraphComplexityDouble);
 		const auto Halstead = OUU::BlueprintValidation::ComputeHalsteadGraphComplexity(*Graph);
-		const auto LinesOfCode = OUU::BlueprintValidation::CountBlueprintLinesOfCode(*Graph);
+		const int32 HalsteadVolume = FMath::RoundToInt(Halstead.Volume);
+		const int32 LinesOfCode = OUU::BlueprintValidation::CountBlueprintLinesOfCode(*Graph);
 
-		const double MaintainabilityIndex = OUU::BlueprintValidation::ComputeMicrosoftMaintainabilityIndex(
-			Halstead.Volume,
-			GraphComplexity,
-			LinesOfCode);
+		const int32 MaintainabilityIndex =
+			FMath::RoundToInt(OUU::BlueprintValidation::ComputeMicrosoftMaintainabilityIndex(
+				HalsteadVolume,
+				GraphComplexityDouble,
+				LinesOfCode));
 
-		const auto CommentCount = OUU::BlueprintValidation::CountGraphComments(*Graph);
-		const auto NodeCount = Graph->Nodes.Num();
-		const double CommentPercentage =
-			CommentCount > 0 ? (static_cast<double>(CommentCount) / static_cast<double>(NodeCount)) * 100.0 : 0.0;
+		const int32 CommentCount = OUU::BlueprintValidation::CountGraphComments(*Graph);
+		const int32 NodeCount = Graph->Nodes.Num();
+		const int32 CommentPercentage = FMath::RoundToInt(
+			CommentCount > 0 ? (static_cast<double>(CommentCount) / static_cast<double>(NodeCount)) * 100.0 : 0.0);
 
 		if (LogMetrics)
 		{
@@ -133,7 +138,7 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 							"Node Count: {3}; Comment %: {4}"),
 					FText::AsNumber(MaintainabilityIndex),
 					FText::AsNumber(GraphComplexity),
-					FText::AsNumber(Halstead.Volume),
+					FText::AsNumber(HalsteadVolume),
 					FText::AsNumber(NodeCount),
 					FText::AsNumber(CommentPercentage))));
 		}
@@ -159,7 +164,7 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 			*Graph,
 			FText::Format(
 				INVTEXT("Halstead volume: {0} (max per graph: {1})"),
-				FText::AsNumber(Halstead.Volume),
+				FText::AsNumber(HalsteadVolume),
 				FText::AsNumber(Settings.MaxHalsteadVolumePerGraph)));
 
 		ConditionallyAddMessage(
