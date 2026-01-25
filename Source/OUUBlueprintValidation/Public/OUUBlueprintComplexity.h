@@ -32,7 +32,7 @@ namespace OUU::BlueprintValidation
 	// combined with AND or OR operators) as separate decision points in the program. Instead, we use the more lenient
 	// evaluation of execution paths suggested by Hangar 13's Valentin Galea in his Unreal Fest 2024 talk:
 	// https://dev.epicgames.com/community/learning/talks-and-demos/z0WW/unreal-engine-de-spaghetti-your-blueprints-the-scientific-way-unreal-fest-2024
-	double ComputeCyclomaticGraphComplexity(UEdGraph& Graph);
+	OUUBLUEPRINTVALIDATION_API double ComputeCyclomaticGraphComplexity(UEdGraph& Graph);
 
 	struct FHalsteadComplexity
 	{
@@ -48,15 +48,15 @@ namespace OUU::BlueprintValidation
 	// This implementation assumes:
 	// - Operators are: Non-pure nodes and pure nodes taking inputs
 	// - Operands are:  Literal pin values and pure nodes without inputs
-	FHalsteadComplexity ComputeHalsteadGraphComplexity(UEdGraph& Graph);
+	OUUBLUEPRINTVALIDATION_API FHalsteadComplexity ComputeHalsteadGraphComplexity(UEdGraph& Graph);
 
 	// @returns the "number of lines" in a blueprint graph:
 	// number of impure nodes + (number of pure nodes / 5)
 	// conservatively assuming every 5 impure nodes is equivalent to a new line of code
-	double CountBlueprintLinesOfCode(UEdGraph& Graph);
+	OUUBLUEPRINTVALIDATION_API double CountBlueprintLinesOfCode(UEdGraph& Graph);
 
 	// Count all the comments in the graph:
 	// Number of comment nodes and node comments
-	uint32 CountGraphComments(UEdGraph& Graph);
+	OUUBLUEPRINTVALIDATION_API uint32 CountGraphComments(UEdGraph& Graph);
 
 } // namespace OUU::BlueprintValidation

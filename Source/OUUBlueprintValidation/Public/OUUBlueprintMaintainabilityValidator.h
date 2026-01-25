@@ -10,7 +10,7 @@
 
 // Validates blueprints for complexity metrics configured in OUUBlueprintValidationSettings
 UCLASS()
-class UOUUBlueprintMaintainabilityValidator : public UEditorValidatorBase
+class OUUBLUEPRINTVALIDATION_API UOUUBlueprintMaintainabilityValidator : public UEditorValidatorBase
 {
 	GENERATED_BODY()
 public:

@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 
+#include "EdGraph/EdGraph.h"
+
 namespace OUU::BlueprintValidation
 {
-	bool IsBlueprintGraph(UEdGraph& Graph);
+	bool IsBlueprintGraph(const UEdGraph& Graph);
 
 	// should return true for macro entry, function entry and event graph event nodes
 	bool IsBlueprintEntryNode(UEdGraphNode& Node);

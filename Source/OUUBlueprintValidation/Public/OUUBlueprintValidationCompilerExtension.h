@@ -11,8 +11,6 @@ class UOUUBlueprintValidationCompilerExtension : public UBlueprintCompilerExtens
 {
 	GENERATED_BODY()
 protected:
-	void ProcessBlueprintCompiled(const FKismetCompilerContext& CompilationContext, const FBlueprintCompiledData& Data) override;
-
-private:
-	void ValidateMaintainability(const FKismetCompilerContext& CompilationContext);
+	void ProcessBlueprintCompiled(const FKismetCompilerContext& CompilationContext, const FBlueprintCompiledData& Data)
+		override;
 };

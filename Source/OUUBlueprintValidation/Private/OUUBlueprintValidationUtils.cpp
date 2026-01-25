@@ -2,13 +2,15 @@
 
 #include "OUUBlueprintValidationUtils.h"
 
+#include "EdGraphSchema_K2.h"
 #include "K2Node_EventNodeInterface.h"
 #include "K2Node_FunctionEntry.h"
 #include "K2Node_Tunnel.h"
 
 namespace OUU::BlueprintValidation
 {
-	bool IsBlueprintGraph(UEdGraph& Graph) { return IsValid(Cast<UEdGraphSchema_K2>(Graph.GetSchema())); }
+	bool IsBlueprintGraph(const UEdGraph& Graph) { return IsValid(Cast<UEdGraphSchema_K2>(Graph.GetSchema())); }
+
 	bool IsBlueprintEntryNode(UEdGraphNode& Node)
 	{
 		// for functions and event graphs
@@ -39,8 +41,7 @@ namespace OUU::BlueprintValidation
 		TArray<UEdGraphPin*> ParameterPins;
 		for (auto& Pin : Node.Pins)
 		{
-			if (Pin->Direction == EEdGraphPinDirection::EGPD_Input
-				&& Pin->PinType.PinCategory != UEdGraphSchema_K2::PC_Exec)
+			if (Pin->Direction == EGPD_Input && Pin->PinType.PinCategory != UEdGraphSchema_K2::PC_Exec)
 			{
 				ParameterPins.Add(Pin);
 			}
