@@ -61,6 +61,10 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
 	bool LogMetricsOnAssetValidate = false;
 
+	// Custom documentation for maintainability.
+	// If left empty, the maintainability validator will link to the local plugin README.md instead.
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
+	FString MaintainabilityDocumentationURL;
 
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall", meta = (UIMin = 0, UIMax = 200))
 	int32 MaxGraphsPerBlueprint = 100;

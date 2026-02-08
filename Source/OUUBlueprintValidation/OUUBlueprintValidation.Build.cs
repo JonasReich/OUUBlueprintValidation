@@ -22,7 +22,8 @@ public class OUUBlueprintValidation : ModuleRules
 			"BlueprintGraph",
 			"UnrealEd",
 			"Kismet",
-			"UMGEditor"
+			"UMGEditor",
+			"Projects"
 		});
 	}
 }

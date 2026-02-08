@@ -2,6 +2,7 @@
 #include "OUUBlueprintMaintainabilityValidator.h"
 
 #include "EdGraph/EdGraph.h"
+#include "Interfaces/IPluginManager.h"
 #include "Misc/DataValidation.h"
 #include "OUUBlueprintComplexity.h"
 #include "OUUBlueprintValidationSettings.h"
@@ -165,6 +166,22 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 					FText::AsNumber(HalsteadVolume),
 					FText::AsNumber(NodeCount),
 					FText::AsNumber(CommentPercentage)));
+
+			FString MessageURL = Settings.MaintainabilityDocumentationURL;
+			if (MessageURL.IsEmpty())
+			{
+				auto& PluginManager = IPluginManager::Get();
+				if (auto PluginPtr = PluginManager.FindPlugin(TEXT("OUUBlueprintValidation")))
+				{
+					MessageURL = FString::Printf(
+						TEXT("file:///%s/README.md"),
+						*FPaths::ConvertRelativePathToFull(PluginPtr->GetBaseDir()));
+				}
+			}
+			if (MessageURL.IsEmpty() == false)
+			{
+				MetricMessage->AddToken(FURLToken::Create(MessageURL, INVTEXT("HELP")));
+			}
 			if (AnyGraphRuleFailed)
 			{
 				MessageFunction(MetricMessage);
