@@ -6,6 +6,8 @@
 #include "K2Node_EventNodeInterface.h"
 #include "K2Node_FunctionEntry.h"
 #include "K2Node_Tunnel.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "Misc/UObjectToken.h"
 
 namespace OUU::BlueprintValidation
 {
@@ -47,6 +49,30 @@ namespace OUU::BlueprintValidation
 			}
 		}
 		return ParameterPins;
+	}
+
+	void OnMessageLogLinkActivated(const TSharedRef<IMessageToken>& Token)
+	{
+		if (Token->GetType() == EMessageToken::Object)
+		{
+			const TSharedRef<FUObjectToken> UObjectToken = StaticCastSharedRef<FUObjectToken>(Token);
+			if (UObjectToken->GetObject().IsValid())
+			{
+				FKismetEditorUtilities::BringKismetToFocusAttentionOnObject(UObjectToken->GetObject().Get());
+			}
+		}
+	}
+
+	TSharedRef<IMessageToken> CreateGraphOrNodeToken(const UObject* InObject)
+	{
+		auto DisplayName = FText::FromString(GetNameSafe(InObject));
+		if (auto* Node = Cast<UEdGraphNode>(InObject))
+		{
+			DisplayName = Node->GetNodeTitle(ENodeTitleType::Type::ListView);
+		}
+
+		return FUObjectToken::Create(InObject, DisplayName)
+			->OnMessageTokenActivated(FOnMessageTokenActivated::CreateStatic(&OnMessageLogLinkActivated));
 	}
 
 } // namespace OUU::BlueprintValidation

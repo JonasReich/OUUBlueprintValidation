@@ -15,4 +15,8 @@ namespace OUU::BlueprintValidation
 
 	TArray<UEdGraphPin*> GetInputParameterPins(UEdGraphNode& Node);
 
+	void OnMessageLogLinkActivated(const TSharedRef<IMessageToken>& Token);
+
+	TSharedRef<IMessageToken> CreateGraphOrNodeToken(const UObject* InObject);
+
 } // namespace OUU::BlueprintValidation

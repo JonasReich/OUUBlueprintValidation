@@ -4,9 +4,8 @@
 
 #include "Editor/UMGEditor/Public/Settings/WidgetDesignerSettings.h"
 #include "Editor/UMGEditor/Public/WidgetBlueprint.h"
-#include "Kismet2/KismetEditorUtilities.h"
 #include "KismetCompiler.h"
-#include "Misc/UObjectToken.h"
+#include "OUUBlueprintDisallowedNodesValidator.h"
 #include "OUUBlueprintMaintainabilityValidator.h"
 #include "OUUBlueprintValidationSettings.h"
 
@@ -27,6 +26,12 @@ void UOUUBlueprintValidationCompilerExtension::ProcessBlueprintCompiled(
 		*CompilationContext.Blueprint,
 		[&](TSharedRef<FTokenizedMessage> Message) { CompilationContext.MessageLog.AddTokenizedMessage(Message); },
 		ShouldLogMetrics);
+	CompilationContext.MessageLog.EndEvent();
+
+	CompilationContext.MessageLog.BeginEvent(TEXT("ValidateDisallowedNodes"));
+	UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
+		*CompilationContext.Blueprint,
+		[&](TSharedRef<FTokenizedMessage> Message) { CompilationContext.MessageLog.AddTokenizedMessage(Message); });
 	CompilationContext.MessageLog.EndEvent();
 
 	if (ShouldLogMetrics && CompilationContext.Blueprint->IsA<UWidgetBlueprint>()

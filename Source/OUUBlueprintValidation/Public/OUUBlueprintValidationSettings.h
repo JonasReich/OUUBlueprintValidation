@@ -8,6 +8,25 @@
 
 #include "OUUBlueprintValidationSettings.generated.h"
 
+UENUM()
+enum class EOUUBlueprintValidationSeverity
+{
+	DoNotValidate,
+	Info,
+	Warning,
+	Error
+};
+
+FORCEINLINE EMessageSeverity::Type ToMessageSeverity(EOUUBlueprintValidationSeverity Severity)
+{
+	switch (Severity)
+	{
+	case EOUUBlueprintValidationSeverity::Error: return EMessageSeverity::Error;
+	case EOUUBlueprintValidationSeverity::Warning: return EMessageSeverity::Warning;
+	default: return EMessageSeverity::Info;
+	}
+}
+
 UCLASS(Config = Editor, DefaultConfig)
 class UOUUBlueprintValidationSettings : public UDeveloperSettings
 {
@@ -21,6 +40,18 @@ public:
 	// Should messages for BP maintainability failures be sent only as warning? Otherwise they are sent as error.
 	UPROPERTY(Config, EditAnywhere, Category = "Bluperint Maintainability - Overall")
 	bool WarnOnFailure = false;
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation")
+	EOUUBlueprintValidationSeverity CheckBlueprintCasts = EOUUBlueprintValidationSeverity::Warning;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation")
+	TArray<TSoftClassPtr<UObject>> AllowBlueprintCastToChildrenOf;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation")
+	EOUUBlueprintValidationSeverity CheckDisallowedFunctions = EOUUBlueprintValidationSeverity::Warning;
+
+	// Function paths, and reasons why they are disallowed
+	UPROPERTY(Config, EditAnywhere, CategorY = "Blueprint Validation")
+	TMap<FString, FString> DisallowedFunctionPaths;
 
 	// Should info messages for BP maintainability be sent to the compiler output independent of validation result?
 	UPROPERTY(Config, EditAnywhere, Category = "Bluperint Maintainability - Overall")
