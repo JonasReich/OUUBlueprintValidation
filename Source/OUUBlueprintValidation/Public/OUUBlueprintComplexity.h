@@ -19,7 +19,8 @@ namespace OUU::BlueprintValidation
 	{
 		return FMath::Max(
 			0.0,
-			(171.0 - 5.2 * FMath::Loge(HalsteadVolume) - 0.23 * (Cyclomatic_Complexity)-16.2 * FMath::Loge(LinesOfCode))
+			(171.0 - 5.2 * FMath::Loge(FMath::Max(1.0, HalsteadVolume))
+			 - 0.23 * (Cyclomatic_Complexity)-16.2 * FMath::Loge(FMath::Max(1.0, LinesOfCode)))
 				* 100.0 / 171.0);
 	}
 

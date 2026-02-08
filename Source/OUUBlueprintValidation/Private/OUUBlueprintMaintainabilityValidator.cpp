@@ -2,9 +2,7 @@
 #include "OUUBlueprintMaintainabilityValidator.h"
 
 #include "EdGraph/EdGraph.h"
-#include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/DataValidation.h"
-#include "Misc/UObjectToken.h"
 #include "OUUBlueprintComplexity.h"
 #include "OUUBlueprintValidationSettings.h"
 #include "OUUBlueprintValidationUtils.h"
@@ -17,7 +15,9 @@ bool UOUUBlueprintMaintainabilityValidator::CanValidateAsset_Implementation(
 	// Theoretically we could also limit this to only some context (e.g. skip when saving because it likely happens
 	// together with compilation, but this is not that much duplicate work if save on compile is enabled and keeps it
 	// more consistent).
-	return IsValid(Cast<UBlueprint>(InAsset));
+	return IsValid(Cast<UBlueprint>(InAsset))
+		&& UOUUBlueprintValidationSettings::Get().CheckMaintainabilityMetrics
+		!= EOUUBlueprintValidationSeverity::DoNotValidate;
 }
 
 EDataValidationResult UOUUBlueprintMaintainabilityValidator::ValidateLoadedAsset_Implementation(
@@ -49,39 +49,20 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 	auto MakeGraphMessage =
 		[&](EMessageSeverity::Type Severity, UEdGraph& Graph, FText&& Message) -> TSharedRef<FTokenizedMessage> {
 		auto TokenizedMessage = FTokenizedMessage::Create(Severity);
-
-		struct Local
-		{
-			static void OnMessageLogLinkActivated(const class TSharedRef<IMessageToken>& Token)
-			{
-				if (Token->GetType() == EMessageToken::Object)
-				{
-					const TSharedRef<FUObjectToken> UObjectToken = StaticCastSharedRef<FUObjectToken>(Token);
-					if (UObjectToken->GetObject().IsValid())
-					{
-						FKismetEditorUtilities::BringKismetToFocusAttentionOnObject(UObjectToken->GetObject().Get());
-					}
-				}
-			}
-		};
-
-		TokenizedMessage->AddToken(
-			FUObjectToken::Create(&Graph, FText::FromString(GetNameSafe(&Graph)))
-				->OnMessageTokenActivated(FOnMessageTokenActivated::CreateStatic(&Local::OnMessageLogLinkActivated)));
-
+		TokenizedMessage->AddToken(OUU::BlueprintValidation::CreateGraphOrNodeToken(&Graph));
 		TokenizedMessage->AddText(Message);
 		return TokenizedMessage;
 	};
 
+	bool AnyGraphRuleFailed = false;
 	auto ConditionallyAddMessage = [&](bool Failed, UEdGraph& Graph, FText&& Message) {
 		if (Failed == false)
 		{
 			return;
 		}
-		MessageFunction(MakeGraphMessage(
-			Settings.WarnOnFailure ? EMessageSeverity::Warning : EMessageSeverity::Error,
-			Graph,
-			MoveTemp(Message)));
+		AnyGraphRuleFailed = true;
+		MessageFunction(
+			MakeGraphMessage(ToMessageSeverity(Settings.CheckMaintainabilityMetrics), Graph, MoveTemp(Message)));
 	};
 
 	TArray<UEdGraph*> Graphs;
@@ -92,8 +73,7 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 	if (TooManyGraphs || LogMetrics)
 	{
 		MessageFunction(FTokenizedMessage::Create(
-			TooManyGraphs ? Settings.WarnOnFailure ? EMessageSeverity::Warning : EMessageSeverity::Error
-						  : EMessageSeverity::Info,
+			TooManyGraphs ? ToMessageSeverity(Settings.CheckMaintainabilityMetrics) : EMessageSeverity::Info,
 			FText::Format(
 				INVTEXT("Number of graphs: {0} (max per BP: {1})"),
 				FText::AsNumber(NumBlueprintGraphs),
@@ -108,6 +88,8 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 		{
 			continue;
 		}
+
+		AnyGraphRuleFailed = false;
 
 		// For display purposes: round all values to integers
 
@@ -127,21 +109,6 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 		const int32 NodeCount = Graph->Nodes.Num();
 		const int32 CommentPercentage = FMath::RoundToInt(
 			CommentCount > 0 ? (static_cast<double>(CommentCount) / static_cast<double>(NodeCount)) * 100.0 : 0.0);
-
-		if (LogMetrics)
-		{
-			MetricMessages.Add(MakeGraphMessage(
-				EMessageSeverity::Info,
-				*Graph,
-				FText::Format(
-					INVTEXT("Maintainability Index: {0}; Cyclomatic Complexity: {1}; Halstead Volume: {2}; "
-							"Node Count: {3}; Comment %: {4}"),
-					FText::AsNumber(MaintainabilityIndex),
-					FText::AsNumber(GraphComplexity),
-					FText::AsNumber(HalsteadVolume),
-					FText::AsNumber(NodeCount),
-					FText::AsNumber(CommentPercentage))));
-		}
 
 		ConditionallyAddMessage(
 			MaintainabilityIndex < Settings.MinGraphMaintainabilityIndex,
@@ -184,6 +151,29 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 				FText::AsNumber(CommentPercentage),
 				FText::AsNumber(Settings.MinCommentPercentagePerGraph),
 				FText::AsNumber(Settings.MinNumberOfNodesToConsiderComments)));
+
+		if (LogMetrics || AnyGraphRuleFailed)
+		{
+			auto MetricMessage = MakeGraphMessage(
+				EMessageSeverity::Info,
+				*Graph,
+				FText::Format(
+					INVTEXT("Maintainability Index: {0}; Cyclomatic Complexity: {1}; Halstead Volume: {2}; "
+							"Node Count: {3}; Comment %: {4}"),
+					FText::AsNumber(MaintainabilityIndex),
+					FText::AsNumber(GraphComplexity),
+					FText::AsNumber(HalsteadVolume),
+					FText::AsNumber(NodeCount),
+					FText::AsNumber(CommentPercentage)));
+			if (AnyGraphRuleFailed)
+			{
+				MessageFunction(MetricMessage);
+			}
+			else
+			{
+				MetricMessages.Add(MetricMessage);
+			}
+		}
 	}
 
 	if (LogMetrics)
