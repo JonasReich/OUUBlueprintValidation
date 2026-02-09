@@ -86,7 +86,8 @@ void UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
 				if (Function && Settings.CheckDisallowedFunctions != EOUUBlueprintValidationSeverity::DoNotValidate)
 				{
 					auto FunctionPath = Function->GetPathName();
-					if (auto* Reason = Settings.DisallowedFunctionPaths.Find(FunctionPath))
+					auto* ReasonPtr = Settings.FindDisallowedFunctionReason(FunctionPath);
+					if (ReasonPtr)
 					{
 						const auto Message =
 							FTokenizedMessage::Create(ToMessageSeverity(Settings.CheckDisallowedFunctions));
@@ -94,7 +95,7 @@ void UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
 						auto Text = FText::Format(
 							INVTEXT("Usage of this function was explicitly disallowed in the project settings. Reason: "
 									"{0}"),
-							FText::AsCultureInvariant(*Reason));
+							FText::AsCultureInvariant(*ReasonPtr));
 						Message->AddText(Text);
 						if (FunctionNode->bHasCompilerMessage == false)
 						{

@@ -27,6 +27,18 @@ FORCEINLINE EMessageSeverity::Type ToMessageSeverity(EOUUBlueprintValidationSeve
 	}
 }
 
+USTRUCT()
+struct FOUUBV_KeyValuePair
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(Config, EditAnywhere)
+	FString Key;
+
+	UPROPERTY(Config, EditAnywhere)
+	FString Value;
+};
+
 UCLASS(Config = Editor, DefaultConfig)
 class UOUUBlueprintValidationSettings : public UDeveloperSettings
 {
@@ -46,9 +58,14 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation")
 	EOUUBlueprintValidationSeverity CheckDisallowedFunctions = EOUUBlueprintValidationSeverity::Warning;
 
+private:
 	// Function paths, and reasons why they are disallowed
 	UPROPERTY(Config, EditAnywhere, CategorY = "Blueprint Validation")
-	TMap<FString, FString> DisallowedFunctionPaths;
+	TArray<FOUUBV_KeyValuePair> DisallowedFunctionPaths;
+
+public:
+	// @returns reason for disallowing function if it is disallowed
+	const FString* FindDisallowedFunctionReason(const FString& FunctionPath) const;
 
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
 	EOUUBlueprintValidationSeverity CheckMaintainabilityMetrics = EOUUBlueprintValidationSeverity::Warning;
