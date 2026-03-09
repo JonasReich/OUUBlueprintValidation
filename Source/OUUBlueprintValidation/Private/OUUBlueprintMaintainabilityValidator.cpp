@@ -32,7 +32,7 @@ EDataValidationResult UOUUBlueprintMaintainabilityValidator::ValidateLoadedAsset
 		Blueprint,
 		[&](TSharedRef<FTokenizedMessage> Message) {
 			Context.AddMessage(Message);
-			if (Message->GetSeverity() != EMessageSeverity::Info)
+			if (Message->GetSeverity() == EMessageSeverity::Error)
 			{
 				Result = EDataValidationResult::Invalid;
 			}

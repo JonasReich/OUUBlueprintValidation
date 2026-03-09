@@ -25,7 +25,7 @@ EDataValidationResult UOUUBlueprintDisallowedNodesValidator::ValidateLoadedAsset
 	EDataValidationResult Result = EDataValidationResult::Valid;
 	ValidateDisallowedNodes(Blueprint, [&](TSharedRef<FTokenizedMessage> Message) {
 		Context.AddMessage(Message);
-		if (Message->GetSeverity() != EMessageSeverity::Info)
+		if (Message->GetSeverity() == EMessageSeverity::Error)
 		{
 			Result = EDataValidationResult::Invalid;
 		}
