@@ -99,3 +99,15 @@ I recommend adding any functions that are likely to misuse and cause runtime hit
 
 The functions are referenced by their function path in the project settings, so you'll have to look up
 the function library or class and its module for the full path, e.g. `/Script/Engine.KismetSystemLibrary:LoadAsset_Blocking`.
+
+## Performance Validator
+
+This validator looks for known low-performance node setups. Currently it checks:
+
+- **Pure node with array output connected to a blueprint macro input pin.**
+  Blueprint macros are inlined at compile time, so an input pin that is referenced multiple times inside
+  the macro body causes the upstream pure node to be re-executed on every reference. If that pure node
+  returns an array (e.g. `Get All Actors of Class`, a TArray getter, etc.) the entire array is rebuilt
+  for every reference, which can be very expensive in loop or selector macros.
+  Fix by caching the array into a local variable before passing it into the macro, or by converting the
+  macro into a function (function inputs are evaluated exactly once per call).

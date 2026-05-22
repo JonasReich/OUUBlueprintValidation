@@ -67,6 +67,12 @@ public:
 	// @returns reason for disallowing function if it is disallowed
 	const FString* FindDisallowedFunctionReason(const FString& FunctionPath) const;
 
+	// Flags pure nodes whose container output is wired into the input pin of a blueprint macro instance.
+	// Macro inputs are inlined per reference, so the pure node is re-executed - and the container re-built -
+	// every time the macro body references the input pin.
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation")
+	EOUUBlueprintValidationSeverity CheckPureContainerIntoMacroInput = EOUUBlueprintValidationSeverity::Warning;
+
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
 	EOUUBlueprintValidationSeverity CheckMaintainabilityMetrics = EOUUBlueprintValidationSeverity::Warning;
 

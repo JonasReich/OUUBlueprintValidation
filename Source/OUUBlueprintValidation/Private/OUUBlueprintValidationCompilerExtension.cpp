@@ -7,6 +7,7 @@
 #include "KismetCompiler.h"
 #include "OUUBlueprintDisallowedNodesValidator.h"
 #include "OUUBlueprintMaintainabilityValidator.h"
+#include "OUUBlueprintPerformanceValidator.h"
 #include "OUUBlueprintValidationSettings.h"
 
 void UOUUBlueprintValidationCompilerExtension::ProcessBlueprintCompiled(
@@ -30,6 +31,12 @@ void UOUUBlueprintValidationCompilerExtension::ProcessBlueprintCompiled(
 
 	CompilationContext.MessageLog.BeginEvent(TEXT("ValidateDisallowedNodes"));
 	UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
+		*CompilationContext.Blueprint,
+		[&](TSharedRef<FTokenizedMessage> Message) { CompilationContext.MessageLog.AddTokenizedMessage(Message); });
+	CompilationContext.MessageLog.EndEvent();
+
+	CompilationContext.MessageLog.BeginEvent(TEXT("ValidatePerformance"));
+	UOUUBlueprintPerformanceValidator::ValidatePerformance(
 		*CompilationContext.Blueprint,
 		[&](TSharedRef<FTokenizedMessage> Message) { CompilationContext.MessageLog.AddTokenizedMessage(Message); });
 	CompilationContext.MessageLog.EndEvent();
