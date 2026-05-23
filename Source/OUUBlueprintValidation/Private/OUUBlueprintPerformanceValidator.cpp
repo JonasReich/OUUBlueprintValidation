@@ -4,6 +4,7 @@
 
 #include "EdGraphSchema_K2.h"
 #include "IClassVariableCreator.h"
+#include "K2Node_BreakStruct.h"
 #include "K2Node_Knot.h"
 #include "K2Node_MacroInstance.h"
 #include "K2Node_MapForEach.h"
@@ -55,7 +56,8 @@ namespace OUU::BlueprintValidation::Private
 			return false;
 		}
 		// IClassVariableCreator is the only way for us to check for property access nodes
-		if (Node.IsA<UK2Node_VariableGet>() || Node.IsA<UK2Node_Knot>() || Node.Implements<UClassVariableCreator>())
+		if (Node.IsA<UK2Node_VariableGet>() || Node.IsA<UK2Node_Knot>() || Node.IsA<UK2Node_BreakStruct>()
+			|| Node.IsA<UK2Node_StructMemberGet>() || Node.Implements<UClassVariableCreator>())
 		{
 			return false;
 		}
