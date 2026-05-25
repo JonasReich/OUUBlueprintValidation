@@ -67,11 +67,22 @@ public:
 	// @returns reason for disallowing function if it is disallowed
 	const FString* FindDisallowedFunctionReason(const FString& FunctionPath) const;
 
-	// Flags pure nodes whose container output is wired into the input pin of a blueprint macro instance.
-	// Macro inputs are inlined per reference, so the pure node is re-executed - and the container re-built -
-	// every time the macro body references the input pin.
+	// Flags pure nodes whose container output is wired into the input pin of a blueprint macro instance
+	// or Map/SetForEach iterator node. Those targets re-reference their container input pin internally,
+	// so the pure node is re-executed - and the container re-built - for every reference.
+	// The detection walks through chains of cheap pure passthrough nodes (knots, struct breaks, property
+	// access, ...) so the offender is flagged even when it isn't directly wired to the target.
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation")
 	EOUUBlueprintValidationSeverity CheckPureContainerIntoMacroInput = EOUUBlueprintValidationSeverity::Warning;
+
+	// Flags pure nodes whose effective evaluation count (the sum of downstream pin reads reached through
+	// chains of pure passthrough nodes) exceeds MaxAllowedPureNodeEvaluations. Pure nodes are not cached
+	// by the Blueprint VM, so fan-out means repeated work.
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation")
+	EOUUBlueprintValidationSeverity CheckMultiplyEvaluatedPureNodes = EOUUBlueprintValidationSeverity::Warning;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Validation", meta = (UIMin = 1, ClampMin = 1, UIMax = 10))
+	int32 MaxAllowedPureNodeEvaluations = 1;
 
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
 	EOUUBlueprintValidationSeverity CheckMaintainabilityMetrics = EOUUBlueprintValidationSeverity::Warning;

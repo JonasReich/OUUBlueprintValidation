@@ -102,12 +102,39 @@ the function library or class and its module for the full path, e.g. `/Script/En
 
 ## Performance Validator
 
-This validator looks for known low-performance node setups. Currently it checks:
+This validator looks for known low-performance node setups. The detection logic is built on a shared
+forward-DFS traversal that walks through every pure node and only flags those that actually run
+user-authored code: pure **function calls**, pure **macro instances**, and pure **collapsed-graph
+composites**. Everything else pure (reroute knots, variable getters / property access, struct breaks,
+literals, self/enum-literal sources, ...) is treated as a cheap passthrough — still traversed *through*
+so an expensive source sitting behind one of them is caught, but never flagged on its own.
 
-- **Pure node with array output connected to a blueprint macro input pin.**
-  Blueprint macros are inlined at compile time, so an input pin that is referenced multiple times inside
-  the macro body causes the upstream pure node to be re-executed on every reference. If that pure node
-  returns an array (e.g. `Get All Actors of Class`, a TArray getter, etc.) the entire array is rebuilt
-  for every reference, which can be very expensive in loop or selector macros.
-  Fix by caching the array into a local variable before passing it into the macro, or by converting the
-  macro into a function (function inputs are evaluated exactly once per call).
+### Pure container output feeding a macro / ForEach iterator
+
+Blueprint macros are inlined at compile time and the `MapForEach` / `SetForEach` iterator nodes re-read
+their container input on every loop iteration. In both cases the connected upstream pure node is
+re-evaluated for every internal reference. If that pure node returns a container (e.g. `Get All Actors of
+Class`, a `Filter Array` call, a TArray getter, ...) the entire container is rebuilt each time, which can
+be very expensive.
+
+Fix by caching the container into a local variable before passing it into the macro / iterator, or by
+converting the macro into a function (function inputs are evaluated exactly once per call).
+
+### Pure node evaluated multiple times
+
+Pure nodes are not cached by the Blueprint VM - they run again every time any of their output pins is
+read. A pure node whose value reaches **N** downstream consumer pins (directly, or through any chain of
+cheap pure passthrough nodes) is therefore executed **N** times per outer impure execution. The
+"effective evaluation count" is computed by forward DFS through pure descendants, terminating at any
+impure boundary (each impure consumer counts as one evaluation).
+
+The validator flags an expensive pure node whose effective evaluation count exceeds
+`MaxAllowedPureNodeEvaluations` (default 1). The fix is the same as above: cache the value into a local
+variable assigned from an impure exec step (e.g. on BeginPlay, or right before the consuming block) and
+read the variable from each consumer instead.
+
+Only pure function calls, macro instances, and collapsed-graph composites are eligible for flagging;
+every other pure node (variable getters, knots, struct breaks, literals, ...) is considered a cheap
+passthrough that doesn't perform real work on its own. They are still part of the traversal though, so
+an expensive pure function call sitting behind a `BreakStruct` that fans out four ways is correctly
+flagged with count `4`.
