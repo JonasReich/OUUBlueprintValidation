@@ -41,13 +41,12 @@ namespace OUU::BlueprintValidation::Private
 	// Per-node summary of what happens downstream of a node when its value is consumed by the BP VM.
 	struct FPureNodeAnalysis
 	{
-		// How many times the BP VM will evaluate this node, considering that pure nodes are not cached
-		// and get re-run on every pin read. Impure nodes are treated as a single evaluation (one read per
-		// exec). For pure nodes this is the sum, over each outgoing pin connection, of the downstream
-		// node's own EvalCount - which makes pin connections (not consumer nodes) the unit of counting.
-		// That correctly handles e.g. an impure node reading the same upstream pure output via two
-		// different input pins (counts as 2).
-		int32 EvalCount = 0;
+		// Distinct impure consumer nodes reachable downstream of this node through any chain of pure
+		// passthrough intermediaries. The Blueprint VM caches each pure node's value per impure consumer
+		// that depends on it, so multiple input pins of the same impure node wired to the same pure
+		// output only trigger one evaluation. ImpureConsumers.Num() is therefore the pure node's
+		// effective evaluation count.
+		TSet<UEdGraphNode*> ImpureConsumers;
 
 		// Distinct (impure-target-node, container-typed-input-pin) edges reachable downstream of this
 		// node through any chain of pure passthrough intermediaries. Used by the container-into-target
@@ -57,7 +56,7 @@ namespace OUU::BlueprintValidation::Private
 	};
 
 	// Forward DFS analyzer with per-graph memoization on the node pointer.
-	// EvalCount is intrinsic to a node (depends only on its own downstream subgraph), so caching a
+	// The analysis is intrinsic to a node (depends only on its own downstream subgraph), so caching a
 	// single FPureNodeAnalysis per node is sound regardless of how many ancestors reach it.
 	class FPureNodeAnalyzer
 	{
@@ -80,8 +79,9 @@ namespace OUU::BlueprintValidation::Private
 
 			if (IsImpureOrUnknown)
 			{
-				// Impure nodes are the cache boundary - they evaluate their inputs once when they execute.
-				Result.EvalCount = 1;
+				// This node IS the impure consumer - bubble it up so every ancestor pure node knows
+				// its value is read by exactly this impure node, once per impure exec.
+				Result.ImpureConsumers.Add(&Node);
 			}
 			else
 			{
@@ -106,7 +106,7 @@ namespace OUU::BlueprintValidation::Private
 						}
 
 						const auto& Sub = Analyze(*DownNode);
-						Result.EvalCount += Sub.EvalCount;
+						Result.ImpureConsumers.Append(Sub.ImpureConsumers);
 
 						auto* DownK2 = Cast<UK2Node>(DownNode);
 						const bool DownIsImpureOrUnknown = DownK2 == nullptr || DownK2->IsNodePure() == false;
@@ -238,17 +238,21 @@ void UOUUBlueprintPerformanceValidator::ValidatePerformance(
 			}
 
 			// Multi-evaluation check: a pure node whose effective evaluation count exceeds the threshold.
-			if (CheckMultiEval && Analysis.EvalCount > Settings.MaxAllowedPureNodeEvaluations)
+			// Evaluation count == number of distinct impure consumer nodes that depend on this pure
+			// node downstream (the BP VM evaluates a pure node once per impure consumer that reads it,
+			// regardless of how many of that consumer's input pins are wired back to the same pure
+			// output - hence the set, not edge count).
+			if (CheckMultiEval && Analysis.ImpureConsumers.Num() > Settings.MaxAllowedPureNodeEvaluations)
 			{
 				const auto Severity = ToMessageSeverity(Settings.CheckMultiplyEvaluatedPureNodes);
 				const auto Message = FTokenizedMessage::Create(Severity);
 				Message->AddToken(OUU::BlueprintValidation::CreateGraphOrNodeToken(PureNode));
 				const auto Text = FText::Format(
 					INVTEXT(" (pure node) will be evaluated {0} times - its output (directly or via passthrough pure "
-							"nodes) is read by {0} downstream pin connections. Pure nodes are not cached, so each pin "
-							"read re-runs the node. Cache the value into a local variable assigned from an impure "
-							"step and read the variable instead."),
-					FText::AsNumber(Analysis.EvalCount));
+							"nodes) reaches {0} distinct impure consumer nodes downstream. Pure nodes are not cached "
+							"across consumers, so each one re-runs the node. Cache the value into a local variable "
+							"assigned from an impure step and read the variable instead."),
+					FText::AsNumber(Analysis.ImpureConsumers.Num()));
 				Message->AddText(Text);
 
 				if (PureNode->bHasCompilerMessage == false)
