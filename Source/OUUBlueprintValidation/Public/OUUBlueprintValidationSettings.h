@@ -87,6 +87,13 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
 	EOUUBlueprintValidationSeverity CheckMaintainabilityMetrics = EOUUBlueprintValidationSeverity::Warning;
 
+	// Reports disconnected nodes: impure nodes that are not reachable from any graph entry point
+	// (function/macro entry or event node), and pure nodes whose value never reaches such a reachable
+	// impure node. Comment boxes and collapsed-graph (composite) nodes are treated as organizational and
+	// are never flagged.
+	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
+	EOUUBlueprintValidationSeverity CheckDisconnectedNodes = EOUUBlueprintValidationSeverity::Warning;
+
 	// Should info messages for BP maintainability be sent to the compiler output independent of validation result?
 	UPROPERTY(Config, EditAnywhere, Category = "Blueprint Maintainability - Overall")
 	bool LogMetricsOnBlueprintCompile = false;

@@ -11,7 +11,14 @@
 
 namespace OUU::BlueprintValidation
 {
-	bool IsBlueprintGraph(const UEdGraph& Graph) { return IsValid(Cast<UEdGraphSchema_K2>(Graph.GetSchema())); }
+	bool IsBlueprintGraph(const UEdGraph& Graph)
+	{
+		auto* pSchema = Cast<UEdGraphSchema_K2>(Graph.GetSchema());
+		// Many ed graph types like ability graphs are "full" BP graphs, but the checks in this lib don't make sense for
+		// anim graphs, because all the blend graphs, etc. come with their own set of connection rules that were not
+		// considered.
+		return IsValid(pSchema) && pSchema->GetName().Contains(TEXT("Anim")) == false;
+	}
 
 	bool IsBlueprintEntryNode(UEdGraphNode& Node)
 	{
