@@ -13,6 +13,10 @@ UCLASS()
 class OUUBLUEPRINTVALIDATION_API UOUUBlueprintDisallowedNodesValidator : public UEditorValidatorBase
 {
 	GENERATED_BODY()
+
+private:
+	static const TCHAR* k_AllowCastFlag;
+	
 public:
 	// - UEditorValidatorBase
 	bool CanValidateAsset_Implementation(

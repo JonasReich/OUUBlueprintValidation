@@ -8,6 +8,8 @@
 #include "OUUBlueprintValidationSettings.h"
 #include "OUUBlueprintValidationUtils.h"
 
+const TCHAR* UOUUBlueprintDisallowedNodesValidator::k_AllowCastFlag(TEXT("AllowCast"));
+
 bool UOUUBlueprintDisallowedNodesValidator::CanValidateAsset_Implementation(
 	const FAssetData& InAssetData,
 	UObject* InAsset,
@@ -50,6 +52,11 @@ void UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
 				if (IsValid(CastNode->TargetType)
 					&& Settings.CheckBlueprintCasts != EOUUBlueprintValidationSeverity::DoNotValidate)
 				{
+					if (CastNode->NodeComment.Contains(k_AllowCastFlag))
+					{
+						continue;
+					}
+					
 					const bool IsBlueprintClass = CastNode->TargetType->HasAnyClassFlags(CLASS_CompiledFromBlueprint);
 					const bool IsInterface = CastNode->TargetType->HasAnyClassFlags(CLASS_Interface);
 
@@ -64,9 +71,10 @@ void UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
 					{
 						const auto Message = FTokenizedMessage::Create(ToMessageSeverity(Settings.CheckBlueprintCasts));
 						Message->AddToken(OUU::BlueprintValidation::CreateGraphOrNodeToken(CastNode));
-						auto Text =
-							INVTEXT("Blueprint casts are disallowed unless explicitly whitelisted to prevent unwanted "
-									"asset reference chains.  Cast to an interface or a C++ base class instead.");
+						auto Text = INVTEXT(
+							"Blueprint casts are disallowed unless explicitly whitelisted to prevent unwanted "
+							"asset reference chains. Cast to an interface or a C++ base class instead. If you want to "
+							"remove this warning, you can add AllowCast in the node's comment section.");
 						Message->AddText(Text);
 
 						if (CastNode->bHasCompilerMessage == false)
