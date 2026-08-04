@@ -32,14 +32,32 @@ namespace OUU::BlueprintValidation
 		if (Node.IsA<UK2Node_Tunnel>())
 		{
 			bool HasInputExecs = false, HasOutputExecs = false;
+			bool HasInputData = false;
 			for (auto* Pin : Node.Pins)
 			{
 				if (Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Exec)
 				{
 					(Pin->Direction == EGPD_Input ? HasInputExecs : HasOutputExecs) = true;
 				}
+				else if (Pin->Direction == EGPD_Input)
+				{
+					HasInputData = true;
+				}
 			}
-			return HasInputExecs == false && HasOutputExecs;
+
+			// Regular case: the input/gateway tunnel of an execution-driven macro or collapsed graph. It carries
+			// execution into the graph via its output exec pins and has no incoming execution of its own.
+			if (HasInputExecs == false && HasOutputExecs)
+			{
+				return true;
+			}
+
+			// Purely data-driven case: a collapsed graph built entirely from pure nodes (e.g. a "math expression"
+			// node) has no execution pins anywhere. Such a graph is evaluated demand-driven from its result tunnel -
+			// the output node pulls the whole upstream pure chain - so we treat that result tunnel (the only tunnel
+			// that consumes data) as the graph's entry point. This anchors the downstream-consumer analysis so a
+			// connected pure chain is not misreported as disconnected.
+			return HasInputExecs == false && HasOutputExecs == false && HasInputData;
 		}
 		return false;
 	}

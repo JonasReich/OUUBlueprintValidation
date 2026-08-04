@@ -10,7 +10,9 @@ namespace OUU::BlueprintValidation
 {
 	bool IsBlueprintGraph(const UEdGraph& Graph);
 
-	// should return true for macro entry, function entry and event graph event nodes
+	// should return true for macro entry, function entry and event graph event nodes.
+	// For collapsed/macro graphs made up entirely of pure nodes (no execution pins anywhere) the result tunnel is
+	// treated as the entry point, because such graphs are evaluated demand-driven from their output.
 	bool IsBlueprintEntryNode(UEdGraphNode& Node);
 
 	TArray<UEdGraphPin*> GetInputParameterPins(UEdGraphNode& Node);
