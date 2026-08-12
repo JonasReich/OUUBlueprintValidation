@@ -8,8 +8,6 @@
 #include "OUUBlueprintValidationSettings.h"
 #include "OUUBlueprintValidationUtils.h"
 
-const TCHAR* UOUUBlueprintDisallowedNodesValidator::k_AllowCastFlag(TEXT("AllowCast"));
-
 bool UOUUBlueprintDisallowedNodesValidator::CanValidateAsset_Implementation(
 	const FAssetData& InAssetData,
 	UObject* InAsset,
@@ -47,16 +45,20 @@ void UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
 	{
 		for (auto Node : Graph->Nodes)
 		{
+			if (Node->NodeComment.IsEmpty() == false)
+			{
+				// Ignore validators for commented nodes.
+				// This assumes whoever spent time commenting also spends some deeper thought on it.
+				// This could be more fine-grained by implementing "disable check XY" comment syntax that can be used to
+				// disable specific validators.
+				continue;
+			}
+
 			if (auto* CastNode = Cast<UK2Node_DynamicCast>(Node))
 			{
 				if (IsValid(CastNode->TargetType)
 					&& Settings.CheckBlueprintCasts != EOUUBlueprintValidationSeverity::DoNotValidate)
 				{
-					if (CastNode->NodeComment.Contains(k_AllowCastFlag))
-					{
-						continue;
-					}
-					
 					const bool IsBlueprintClass = CastNode->TargetType->HasAnyClassFlags(CLASS_CompiledFromBlueprint);
 					const bool IsInterface = CastNode->TargetType->HasAnyClassFlags(CLASS_Interface);
 
