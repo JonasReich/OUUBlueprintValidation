@@ -242,7 +242,7 @@ EDataValidationResult UOUUBlueprintMaintainabilityValidator::ValidateLoadedAsset
 
 void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 	const UBlueprint& Blueprint,
-	TFunctionRef<void(TSharedRef<FTokenizedMessage>)> MessageFunction,
+	const TFunctionRef<void(TSharedRef<FTokenizedMessage>)>& MessageFunction,
 	bool LogMetrics)
 {
 	auto& Settings = UOUUBlueprintValidationSettings::Get();
@@ -253,7 +253,7 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 	const auto DisconnectedNodesSeverity = ToMessageSeverity(Settings.CheckDisconnectedNodes);
 
 	auto MakeGraphMessage =
-		[&](EMessageSeverity::Type Severity, UEdGraph& Graph, FText&& Message) -> TSharedRef<FTokenizedMessage> {
+		[&](EMessageSeverity::Type Severity, const UEdGraph& Graph, FText&& Message) -> TSharedRef<FTokenizedMessage> {
 		auto TokenizedMessage = FTokenizedMessage::Create(Severity);
 		TokenizedMessage->AddToken(OUU::BlueprintValidation::CreateGraphOrNodeToken(&Graph));
 		TokenizedMessage->AddText(Message);
@@ -261,7 +261,7 @@ void UOUUBlueprintMaintainabilityValidator::ValidateMaintainability(
 	};
 
 	bool AnyGraphRuleFailed = false;
-	auto ConditionallyAddMessage = [&](bool Failed, UEdGraph& Graph, FText&& Message) {
+	auto ConditionallyAddMessage = [&](bool Failed, const UEdGraph& Graph, FText&& Message) {
 		if (Failed == false)
 		{
 			return;

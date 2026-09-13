@@ -75,9 +75,8 @@ namespace OUU::BlueprintValidation::Private
 			FPureNodeAnalysis Result;
 
 			auto* K2Node = Cast<UK2Node>(&Node);
-			const bool IsImpureOrUnknown = K2Node == nullptr || K2Node->IsNodePure() == false;
 
-			if (IsImpureOrUnknown)
+			if (K2Node == nullptr || K2Node->IsNodePure() == false) // node is impure or a non-K2 type
 			{
 				// This node IS the impure consumer - bubble it up so every ancestor pure node knows
 				// its value is read by exactly this impure node, once per impure exec.
@@ -109,8 +108,7 @@ namespace OUU::BlueprintValidation::Private
 						Result.ImpureConsumers.Append(Sub.ImpureConsumers);
 
 						auto* DownK2 = Cast<UK2Node>(DownNode);
-						const bool DownIsImpureOrUnknown = DownK2 == nullptr || DownK2->IsNodePure() == false;
-						if (DownIsImpureOrUnknown)
+						if (DownK2 == nullptr || DownK2->IsNodePure() == false) // impure or not a k2-type
 						{
 							if (IsPotentialExpensivePureContainerTarget(*DownNode) && LinkedPin->PinType.IsContainer())
 							{
@@ -166,7 +164,7 @@ EDataValidationResult UOUUBlueprintPerformanceValidator::ValidateLoadedAsset_Imp
 
 void UOUUBlueprintPerformanceValidator::ValidatePerformance(
 	const UBlueprint& Blueprint,
-	TFunctionRef<void(TSharedRef<FTokenizedMessage>)> MessageFunction)
+	const TFunctionRef<void(TSharedRef<FTokenizedMessage>)>& MessageFunction)
 {
 	using namespace OUU::BlueprintValidation::Private;
 
