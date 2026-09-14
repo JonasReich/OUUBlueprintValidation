@@ -10,7 +10,7 @@
 
 namespace OUU::BlueprintValidation
 {
-	int32 CountBranches(UEdGraphNode& Node, TSet<uint32>& VisitedNodes)
+	int32 CountBranches(const UEdGraphNode& Node, TSet<uint32>& VisitedNodes)
 	{
 		if (VisitedNodes.Contains(Node.GetUniqueID()))
 		{

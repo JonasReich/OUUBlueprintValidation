@@ -35,7 +35,7 @@ EDataValidationResult UOUUBlueprintDisallowedNodesValidator::ValidateLoadedAsset
 
 void UOUUBlueprintDisallowedNodesValidator::ValidateDisallowedNodes(
 	const UBlueprint& Blueprint,
-	TFunctionRef<void(TSharedRef<FTokenizedMessage>)> MessageFunction)
+	const TFunctionRef<void(TSharedRef<FTokenizedMessage>)>& MessageFunction)
 {
 	auto& Settings = UOUUBlueprintValidationSettings::Get();
 

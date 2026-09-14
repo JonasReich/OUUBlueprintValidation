@@ -7,7 +7,7 @@
 class FOUUBlueprintValidationModule : public IModuleInterface
 {
 public:
-	void StartupModule()
+	void StartupModule() override
 	{
 		FBlueprintCompilationManager::RegisterCompilerExtension(
 			UBlueprint::StaticClass(),

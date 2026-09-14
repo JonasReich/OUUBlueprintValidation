@@ -28,5 +28,5 @@ public:
 	// This implementation is reused for both this asset validator and the BP compiler extension.
 	static void ValidatePerformance(
 		const UBlueprint& Blueprint,
-		TFunctionRef<void(TSharedRef<FTokenizedMessage>)> MessageFunction);
+		const TFunctionRef<void(TSharedRef<FTokenizedMessage>)>& MessageFunction);
 };
