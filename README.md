@@ -1,4 +1,8 @@
-# OUUBlueprintValidation
+# Open Unreal Utilities - Blueprint Validation
+
+![Open Unreal Utilities - Blueprint Validation logo](./Resources/ouu_wide.png)
+
+> Part of [Open Unreal Utilities](https://github.com/JonasReich/OpenUnrealUtilities), a family of Unreal Engine plugins and tools.
 
 This Unreal Engine plugin adds blueprint validators and a blueprint compiler extensions to check for
 common best practices of node usage and blueprint complexity to ensure they remain maintainable.
